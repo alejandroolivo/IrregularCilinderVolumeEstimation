@@ -12,10 +12,6 @@ scipy
 # Usage
 The input data should be a point cloud file in XYZ format with columns for X, Y, and Z coordinates. To use the tool, run the "VolumeEstimationTool.py" script and provide the path to the input file. The tool will then generate a series of plots to visualize the point cloud, the aligned point cloud, and the fitted ellipses.
 
-css
-Copy code
-python VolumeEstimationTool.py path/to/input/file.xyz
-
 # Parameters
 The tool has several parameters that can be adjusted:
 
