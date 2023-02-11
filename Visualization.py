@@ -9,12 +9,12 @@ from matplotlib.patches import Ellipse
 origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=80, origin=[0,0,0])
 
 # Load two mesh from ply file
-pcd = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\PCs\3\pc0_rot.ply')
-pcd2 = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\PCs\3\pc1_rot.ply')
+# pcd = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\PCs\3\pc0_rot.ply')
+# pcd2 = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\PCs\3\pc1_rot.ply')
 
 # Load a point cloud from a txt file. The txt file has 3 columns: x, y, z
-pcd3 = o3d.io.read_point_cloud(r'.\pts.xyz', format='xyz')
-pcd4 = o3d.io.read_point_cloud(r'.\pts.xyz', format='xyz')
+pcd3 = o3d.io.read_point_cloud(r'.\PointClouds\pts.xyz', format='xyz')
+pcd4 = o3d.io.read_point_cloud(r'.\PointClouds\pts.xyz', format='xyz')
 
 # remove points between X=0 and X=300
 points = np.asarray(pcd3.points)
@@ -30,7 +30,7 @@ pcd4.points = o3d.utility.Vector3dVector(points)
 # ellipse = pcd3.compute_ellipsoid()
 # pcd4 = ellipse.sample_points_uniformly(number_of_points=1000)
 
-
+# cortar jamones
 # points = np.asarray(pcd.points)
 # points = points[points[:,1] < -58]
 # points = points[points[:,1] > -80]
@@ -43,10 +43,11 @@ pcd4.points = o3d.utility.Vector3dVector(points)
 # points2 = points2[points2[:,0] > 300]
 # pcd2.points = o3d.utility.Vector3dVector(points2)
 
-pcd.paint_uniform_color([1, 0.706, 0])
-pcd2.paint_uniform_color([1, 0.0, 0.0])
+# pcd.paint_uniform_color([1, 0.706, 0])
+# pcd2.paint_uniform_color([1, 0.0, 0.0])
 pcd3.paint_uniform_color([0, 0.2, 1])
 pcd4.paint_uniform_color([0.2, 0.9, 0.7])
 
 # draw
-o3d.visualization.draw_geometries([pcd, pcd2, pcd3, pcd4, origin])
+# o3d.visualization.draw_geometries([pcd, pcd2, pcd3, pcd4, origin])
+o3d.visualization.draw_geometries([pcd3, pcd4, origin])

@@ -32,7 +32,7 @@ def fit_ellipse(pointcloud, x_axis_length, isCentered=True, min_aspect_ratio=0.5
     return x0, y0, a, b, theta
 
 
-def split_pointcloud(pointcloud, tol=2):
+def split_pointcloud_in_profiles(pointcloud, tol=2):
     # Sort the point cloud by x-coordinate
     pointcloud = pointcloud[pointcloud[:, 0].argsort()]
 
@@ -59,23 +59,25 @@ def split_pointcloud(pointcloud, tol=2):
 
 
 #Vars
-DRAW_PROFILES = True
+DRAW_PROFILES = False
 PERFORM_PCA = True
 MIN_ASPECT_RATIO = 0.25
-MAX_ASPECT_RATIO = 1
+MAX_ASPECT_RATIO = 0.8
 
 # Load point cloud from file and truncate decimals
 # pointcloud = np.loadtxt('pts_1perfil.xyz', delimiter=' ', usecols=(1,2), dtype=int)
-pointcloud = np.loadtxt('pts.xyz', delimiter=' ', usecols=(0,1,2), dtype=int)
+pointcloud = np.loadtxt('.\PointClouds\pts.xyz', delimiter=' ', usecols=(0,1,2), dtype=int)
 
 # use the function split_pointcloud to split the pointcloud in profiles
-profiles = split_pointcloud(pointcloud)
+profiles = split_pointcloud_in_profiles(pointcloud)
 
 # plotting
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
 ax1.set_aspect('equal')
 ax2.set_aspect('equal')
-fig2, axs = plt.subplots(nrows=len(profiles), ncols=2, figsize=(10,10))
+
+if(DRAW_PROFILES):    
+    fig2, axs = plt.subplots(nrows=len(profiles), ncols=2, figsize=(10,10))
 
 #do a for loop to do the code bellow for each profile
 for i, profile in enumerate(profiles):

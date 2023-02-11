@@ -10,8 +10,8 @@ export_matrix = False
 origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=80, origin=[0,0,0])
 
 # Load two mesh from ply file
-pcd = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\Images\pc0.ply')
-pcd2 = o3d.io.read_point_cloud(r'G:\bcnvision\FACCSA\3D Jamones\Default\Images\pc1.ply')
+pcd = o3d.io.read_point_cloud(r'.\PointClouds\pc0.ply')
+pcd2 = o3d.io.read_point_cloud(r'.\PointClouds\pc1.ply')
 
 pcd.paint_uniform_color([1, 0.706, 0])
 pcd2.paint_uniform_color([1, 0.0, 0.0])
@@ -101,7 +101,7 @@ if(export_matrix):
     matrix_list = matrix_pcd.tolist()
 
     # Write list to json file
-    with open('matrix_VisionSystem1.json', 'w') as f:
+    with open('.\Transformations\matrix_VisionSystem1.json', 'w') as f:
         json.dump(matrix_list, f)
 
         
@@ -109,5 +109,5 @@ if(export_matrix):
     matrix_list = matrix_pcd2.tolist()
 
     # Write list to json file
-    with open('matrix_VisionSystem2.json', 'w') as f:
+    with open('.\Transformations\matrix_VisionSystem2.json', 'w') as f:
         json.dump(matrix_list, f)
