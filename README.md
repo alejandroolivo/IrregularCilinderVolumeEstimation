@@ -19,4 +19,5 @@ DRAW_PROFILES: If True, the tool will plot each 2D profile in a separate subplot
 PERFORM_PCA: If True, the tool will perform PCA to align all profiles.
 MIN_ASPECT_RATIO: The minimum aspect ratio of the fitted ellipse.
 MAX_ASPECT_RATIO: The maximum aspect ratio of the fitted ellipse.
+
 These parameters can be adjusted by changing their values in the "VolumeEstimationTool.py" script.
