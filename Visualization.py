@@ -18,13 +18,16 @@ pcd4 = o3d.io.read_point_cloud(r'.\PointClouds\pts.xyz', format='xyz')
 
 # remove points between X=0 and X=300
 points = np.asarray(pcd3.points)
-points = points[points[:,0] < 80]
+points = points[points[:,0] < 100]
 pcd3.points = o3d.utility.Vector3dVector(points)
 
 # remove points between X=0 and X=300
 points = np.asarray(pcd3.points)
-points = points[points[:,0] > 80]
+points = points[points[:,0] > 100]
 pcd4.points = o3d.utility.Vector3dVector(points)
+
+# Load a point cloud from a txt file. The txt file has 3 columns: x, y, z
+pcd5 = o3d.io.read_point_cloud(r'.\PointClouds\ellipse_points.xyz', format='xyz')
 
 # calculate best fit ellipse
 # ellipse = pcd3.compute_ellipsoid()
@@ -47,7 +50,8 @@ pcd4.points = o3d.utility.Vector3dVector(points)
 # pcd2.paint_uniform_color([1, 0.0, 0.0])
 pcd3.paint_uniform_color([0, 0.2, 1])
 pcd4.paint_uniform_color([0.2, 0.9, 0.7])
+pcd5.paint_uniform_color([0.6, 0.4, 0.7])
 
 # draw
 # o3d.visualization.draw_geometries([pcd, pcd2, pcd3, pcd4, origin])
-o3d.visualization.draw_geometries([pcd3, pcd4, origin])
+o3d.visualization.draw_geometries([pcd3, pcd4, pcd5, origin])

@@ -3,6 +3,11 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import minimize
+import datetime
+
+# print actual timestamp
+print('Start Time = ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
+    
 
 def fit_ellipse(pointcloud, x_axis_length, isCentered=True, min_aspect_ratio=0.5, max_aspect_ratio=1):
     # Define the cost function to minimize
@@ -26,10 +31,13 @@ def fit_ellipse(pointcloud, x_axis_length, isCentered=True, min_aspect_ratio=0.5
     # Minimize the cost function
     result = minimize(cost_function, [x0, y0, a, b], bounds=bounds)
 
+    # get a value of fitting error
+    error = cost_function(result.x)
+
     # Return the parameters that define the best fitting ellipse
     x0, y0, a, b = result.x
     theta = 0.0
-    return x0, y0, a, b, theta
+    return x0, y0, a, b, theta, error
 
 
 def split_pointcloud_in_profiles(pointcloud, tol=2):
@@ -39,9 +47,12 @@ def split_pointcloud_in_profiles(pointcloud, tol=2):
     # Split the point cloud into 2D profiles
     profiles = []
     current_profile = []
+    mean_x = []
     prev_x = None
     for i in range(len(pointcloud)):
         x, y, z = pointcloud[i]
+        if i==0:            
+            mean_x.append(x) 
         if prev_x is None or abs(x - prev_x) < tol:
             # Add point to current profile
             current_profile.append([y, z])
@@ -49,35 +60,42 @@ def split_pointcloud_in_profiles(pointcloud, tol=2):
             # Start new profile
             profiles.append(np.array(current_profile))
             current_profile = [[y, z]]
+            # Add x-coordinate to mean_x
+            mean_x.append(x)
         prev_x = x
 
     # Add last profile to list
     if current_profile:
         profiles.append(np.array(current_profile))
 
-    return profiles
+    return profiles, mean_x
 
 
 #Vars
 DRAW_PROFILES = False
 PERFORM_PCA = True
-MIN_ASPECT_RATIO = 0.25
+MIN_ASPECT_RATIO = 0.2
 MAX_ASPECT_RATIO = 0.8
 
 # Load point cloud from file and truncate decimals
 # pointcloud = np.loadtxt('pts_1perfil.xyz', delimiter=' ', usecols=(1,2), dtype=int)
-pointcloud = np.loadtxt('.\PointClouds\pts.xyz', delimiter=' ', usecols=(0,1,2), dtype=int)
+pointcloud = np.loadtxt('.\PointClouds\pts.xyz', delimiter=' ', usecols=(0,1,2),  dtype=int)
 
 # use the function split_pointcloud to split the pointcloud in profiles
-profiles = split_pointcloud_in_profiles(pointcloud)
+profiles, profile_x = split_pointcloud_in_profiles(pointcloud)
 
 # plotting
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
 ax1.set_aspect('equal')
 ax2.set_aspect('equal')
-
 if(DRAW_PROFILES):    
     fig2, axs = plt.subplots(nrows=len(profiles), ncols=2, figsize=(10,10))
+
+pcas = []
+
+# clean the .xyz file for ellipse points saving
+f = open('.\PointClouds\ellipse_points.xyz', 'w')
+f.close()
 
 #do a for loop to do the code bellow for each profile
 for i, profile in enumerate(profiles):
@@ -94,10 +112,13 @@ for i, profile in enumerate(profiles):
         eigenvectors = pca.components_
 
         # Project point cloud onto principal components
-        # projected = pca.transform(profile)
+        projected = pca.transform(profile)
+
+        # save pca
+        pcas.append(pca)
 
         # move profile to the origin    
-        projected = profile - np.mean(profile, axis=0)
+        # projected = profile - np.mean(profile, axis=0)
         # projected = projected - np.mean(projected, axis=1)
 
 
@@ -123,6 +144,25 @@ for i, profile in enumerate(profiles):
     # Fit ellipse to projected point cloud
     ellipse = fit_ellipse(projected, horizontal_spread, isCentered=PERFORM_PCA, min_aspect_ratio=MIN_ASPECT_RATIO, max_aspect_ratio=MAX_ASPECT_RATIO)
 
+    # transform the ellipse points to the original space using pcas[i] inverted transformation with 100 points in the ellipse
+    ellipse_points_untransformed = np.zeros((100, 2))
+    ellipse_points_untransformed[:, 0] = np.linspace(ellipse[0] - ellipse[2], ellipse[0] + ellipse[2], 100)
+    ellipse_points_untransformed[:, 1] = np.sqrt(1 - (ellipse_points_untransformed[:, 0] - ellipse[0])**2 / ellipse[3]**2) * ellipse[2] + ellipse[1]
+
+
+    if(PERFORM_PCA):
+        ellipse_points_untransformed = pcas[i].inverse_transform(ellipse_points_untransformed)
+
+    # create a 3D pointCloud of the ellipse x=x_mean[i], y and z are the points of the ellipse
+    ellipse_points = np.zeros((len(ellipse_points_untransformed), 3))
+    ellipse_points[:, 0] = profile_x[i]
+    ellipse_points[:, 1] = ellipse_points_untransformed[:, 0]
+    ellipse_points[:, 2] = ellipse_points_untransformed[:, 1]
+    
+    # append ellipse points to the existing points in a .xyz file
+    with open('.\PointClouds\ellipse_points.xyz', 'a') as f:
+        np.savetxt(f, ellipse_points, fmt='%f')
+
     # Plot original point cloud
     ax1.scatter(profile[:, 0], profile[:, 1] + i*50)
     ax1.set_title('Original Point Cloud')
@@ -140,9 +180,15 @@ for i, profile in enumerate(profiles):
     t = np.linspace(0, 2*np.pi, 100)
     x = center[0] + a*np.cos(t)*np.cos(angle) - b*np.sin(t)*np.sin(angle)
     y = center[1] + a*np.cos(t)*np.sin(angle) + b*np.sin(t)*np.cos(angle)
+    error = ellipse[5]
 
-    # Plot the ellipse
-    ax2.plot(x, y + i*50, color='r', linestyle='--', linewidth=1)
+    # Plot the ellipse with a color depending on the error  
+    if error < 4:
+        ax2.plot(x, y + i*50, color='g', linestyle='--', linewidth=1)
+    elif error < 6:
+        ax2.plot(x, y + i*50, color='y', linestyle='--', linewidth=1)
+    else:   
+        ax2.plot(x, y + i*50, color='r', linestyle='--', linewidth=1)
 
     if(DRAW_PROFILES):
         
@@ -162,6 +208,10 @@ for i, profile in enumerate(profiles):
 
         axs[i, 0].set_aspect('equal')
         axs[i, 1].set_aspect('equal')
+
+        
+# print actual timestamp
+print('End Time = ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
 
 # Show plot
 plt.show()
