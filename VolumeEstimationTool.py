@@ -5,9 +5,17 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import minimize
 import datetime
 
-# print actual timestamp
-print('Start Time = ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
-    
+#Vars
+DRAW_PROFILES = False
+PERFORM_PCA = True
+MIN_ASPECT_RATIO = 0.2
+MAX_ASPECT_RATIO = 0.8
+
+# save and print actual timestamp
+datetimeStart = datetime.datetime.now()    
+# print('Start Time = ' + datetimeStart.strftime("%Y-%m-%d %H:%M:%S.%f"))
+
+# Define functions
 
 def fit_ellipse(pointcloud, x_axis_length, isCentered=True, min_aspect_ratio=0.5, max_aspect_ratio=1):
     # Define the cost function to minimize
@@ -39,7 +47,6 @@ def fit_ellipse(pointcloud, x_axis_length, isCentered=True, min_aspect_ratio=0.5
     theta = 0.0
     return x0, y0, a, b, theta, error
 
-
 def split_pointcloud_in_profiles(pointcloud, tol=2):
     # Sort the point cloud by x-coordinate
     pointcloud = pointcloud[pointcloud[:, 0].argsort()]
@@ -69,13 +76,6 @@ def split_pointcloud_in_profiles(pointcloud, tol=2):
         profiles.append(np.array(current_profile))
 
     return profiles, mean_x
-
-
-#Vars
-DRAW_PROFILES = False
-PERFORM_PCA = True
-MIN_ASPECT_RATIO = 0.2
-MAX_ASPECT_RATIO = 0.8
 
 # Load point cloud from file and truncate decimals
 # pointcloud = np.loadtxt('pts_1perfil.xyz', delimiter=' ', usecols=(1,2), dtype=int)
@@ -121,7 +121,6 @@ for i, profile in enumerate(profiles):
         # projected = profile - np.mean(profile, axis=0)
         # projected = projected - np.mean(projected, axis=1)
 
-
     else:
 
         projected = profile
@@ -144,12 +143,19 @@ for i, profile in enumerate(profiles):
     # Fit ellipse to projected point cloud
     ellipse = fit_ellipse(projected, horizontal_spread, isCentered=PERFORM_PCA, min_aspect_ratio=MIN_ASPECT_RATIO, max_aspect_ratio=MAX_ASPECT_RATIO)
 
-    # transform the ellipse points to the original space using pcas[i] inverted transformation with 100 points in the ellipse
+    # Generate x and y values for the ellipse
+    center = (ellipse[0], ellipse[1])
+    a = ellipse[2]
+    b = ellipse[3]
+    angle = 0
+    t = np.linspace(0, 2*np.pi, 100)
     ellipse_points_untransformed = np.zeros((100, 2))
-    ellipse_points_untransformed[:, 0] = np.linspace(ellipse[0] - ellipse[2], ellipse[0] + ellipse[2], 100)
-    ellipse_points_untransformed[:, 1] = np.sqrt(1 - (ellipse_points_untransformed[:, 0] - ellipse[0])**2 / ellipse[3]**2) * ellipse[2] + ellipse[1]
+    x = center[0] + a*np.cos(t)*np.cos(angle) - b*np.sin(t)*np.sin(angle)
+    ellipse_points_untransformed[:, 0] = x
+    y = center[1] + a*np.cos(t)*np.sin(angle) + b*np.sin(t)*np.cos(angle)
+    ellipse_points_untransformed[:, 1] = y
 
-
+    # transform the ellipse points to the original space using pcas[i] inverted transformation with 100 points in the ellipse
     if(PERFORM_PCA):
         ellipse_points_untransformed = pcas[i].inverse_transform(ellipse_points_untransformed)
 
@@ -164,11 +170,11 @@ for i, profile in enumerate(profiles):
         np.savetxt(f, ellipse_points, fmt='%f')
 
     # Plot original point cloud
-    ax1.scatter(profile[:, 0], profile[:, 1] + i*50)
+    ax1.scatter(profile[:, 0], profile[:, 1] + i*50, s=2)
     ax1.set_title('Original Point Cloud')
 
     # Plot projected point cloud
-    ax2.scatter(projected[:, 0], projected[:, 1] + i*50)
+    ax2.scatter(projected[:, 0], projected[:, 1] + i*50, s=2)
     ax2.set_title('Projected Point Cloud')
 
     #add ellipse to the plot
@@ -193,11 +199,11 @@ for i, profile in enumerate(profiles):
     if(DRAW_PROFILES):
         
         # Plot original point cloud
-        axs[i, 0].scatter(profile[:, 0], profile[:, 1])
+        axs[i, 0].scatter(profile[:, 0], profile[:, 1], color='b', s=1)
         axs[i, 0].set_title('Profile {}'.format(i+1))
 
         # Plot projected point cloud
-        axs[i, 1].scatter(projected[:, 0], projected[:, 1])
+        axs[i, 1].scatter(projected[:, 0], projected[:, 1], color='b', s=1)
         axs[i, 1].set_title('Projected Profile {}'.format(i+1))
 
         # Plot the ellipse
@@ -210,8 +216,12 @@ for i, profile in enumerate(profiles):
         axs[i, 1].set_aspect('equal')
 
         
-# print actual timestamp
-print('End Time = ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
+# Print actual timestamp
+datetimeEnd = datetime.datetime.now()
+# print('End Time = ' + datetimeEnd.strftime("%Y-%m-%d %H:%M:%S.%f"))
+
+# Print elapsed Time
+print('Elapsed Time = ' + str(datetimeEnd - datetimeStart))
 
 # Show plot
 plt.show()

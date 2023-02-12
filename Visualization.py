@@ -53,5 +53,5 @@ pcd4.paint_uniform_color([0.2, 0.9, 0.7])
 pcd5.paint_uniform_color([0.6, 0.4, 0.7])
 
 # draw
-# o3d.visualization.draw_geometries([pcd, pcd2, pcd3, pcd4, origin])
+# o3d.visualization.draw_geometries([pcd, pcd2, pcd3, pcd4, pcd5, origin])
 o3d.visualization.draw_geometries([pcd3, pcd4, pcd5, origin])
